@@ -13,6 +13,17 @@
 			<p>
 				{{ form.submit() }}
 			</p>
+			<table style="width:100%">
+				<tr>
+					<th>Votes</th>
+					<th>Username</th>
+					<th>Request</th>
+				</tr>
+				{% for video in videos %}
+					<tr><td>{{ video.votes }}</td><td>{{ video.UID.Username }}</td><td>{{ video.VideoID }}</td></tr>
+				{% endfor %}
+			</table>
+
 		</form>
 	</body>
 </html>

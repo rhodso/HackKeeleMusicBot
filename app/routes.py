@@ -7,10 +7,24 @@ from app.forms import UsernameForm, IDForm
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = UsernameForm()
-    return render_template('index.html', title='HACK Keele | Music Player', form=form)
+
+    videos = [
+        {
+            'votes': 1,
+            'UID': {'Username': 'RoryGee'},
+            'VideoID': 'OWc1jaycOlQ'
+        },
+        {
+            'votes': 1,
+            'UID': {'Username': 'Rhodso'},
+            'VideoID': 'OWc1jaycOlQ'
+        }
+    ]
+
+    return render_template('index.html', title='HACK Keele | Music Player', form=form,videos=videos)
 
 
 @app.route('/requestSong')
 def requestSong():
     form = IDForm()
-    return render_template('request.html', title='HACK Keele | Music Player',form=form)
+    return render_template('request.html', title='HACK Keele | Music Player', form=form)
