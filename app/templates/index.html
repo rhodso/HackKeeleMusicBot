@@ -3,32 +3,18 @@
 		<title>{{ title }}</title>
 	</head>
 	<body>
-		{% if name == 'default' %}
-		<form action="" method="post" novalidate>
-			{{ form.csrf_token }}
-
-			<p>
-				{{ form.userName.label}}<br>
-				{{ form.userName(size=32)}}
-			</p>
-		{% else %}
-			<h1>HACK Thing</h1>
-			<iframe width='560' height='315' src='https://www.youtube.com/embed/{{ curVideo.VideoID }}?&autoplay=1' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe>
-			<p>
-				{{ form.submit() }}
-			</p>
-			<table style="width:100%">
-				<tr>
-					<th>Votes</th>
-					<th>Username</th>
-					<th>Request</th>
-				</tr>
-				{% for video in videos %}
-					<tr><td>[Up / Down]  {{ video.votes }}</td><td>{{ video.UID.Username }}</td><td>{{ video.VideoID }}</td></tr>
-				{% endfor %}
-			</table>
-
-		</form>
-	{% endif %}
+		<h1>HACK Thing</h1>
+		<p>welcome {{ name }}!</p>
+		<iframe width='560' height='315' src='https://www.youtube.com/embed/{{ curVideo.VideoID }}?&autoplay=1' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe>
+		<table style="width:100%">
+			<tr>
+				<th>Votes</th>
+				<th>Username</th>
+				<th>Request</th>
+			</tr>
+			{% for video in videos %}
+				<tr><td>[Up / Down]  {{ video.votes }}</td><td>{{ video.UID.Username }}</td><td>{{ video.VideoID }}</td></tr>
+			{% endfor %}
+		</table>
 	</body>
 </html>
