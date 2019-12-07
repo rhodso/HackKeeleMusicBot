@@ -21,7 +21,7 @@ def index():
         }
     ]
     currentVideo = next(iter(videos))
-    return render_template('index.html', title='HACK Keele | Music Player', form=form,videos=videos, currentVideo=currentVideo)
+    return render_template('index.html', title='HACK Keele | Music Player', form=form,videos=videos, currentVideo=currentVideo, name='RoryGee')
 
 
 @app.route('/requestSong')
