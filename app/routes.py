@@ -7,7 +7,9 @@ from app.forms import UsernameForm, IDForm
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = UsernameForm()
-
+    if form.validate_on_submit():
+        session['username'] = form.userName.data
+        return redirect('/')
     videos = [
         {
             'votes': 1,
@@ -21,10 +23,12 @@ def index():
         }
     ]
     curVideo = next(iter(videos))
-    return render_template('index.html', title='HACK Keele | Music Player', form=form, videos=videos, curVideo=curVideo, name='RoryGee')
+    return render_template('index.html', title='HACK Keele | Music Player', form=form, videos=videos, curVideo=curVideo, name='default')
 
 
-@app.route('/requestSong')
+@app.route('/requestSong', methods=['GET', 'POST'])
 def requestSong():
     form = IDForm()
+    if form.validate_on_submit():
+        return redirect('/')
     return render_template('request.html', title='HACK Keele | Music Player', form=form)

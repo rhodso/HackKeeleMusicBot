@@ -14,16 +14,17 @@ class IDForm(FlaskForm):
 class UsernameForm(FlaskForm):
     def validateName(self, field):
 
-        swearFile = open('badwords', 'r')
+        swearFile = open('app/badwords', 'r')
         swearList = swearFile.readlines()
-        for swear in swearList():
-            if re.match(swear, field):
+        for swear in swearList:
+            swearRegex = r""+swear+""
+            if re.search(swearRegex, str(field), re.IGNORECASE):
                 raise ValidationError('Choose another name...')
         swearFile.close()
 
-        nameFile = open('currentUsers.txt', 'r')
+        nameFile = open('app/currentUsers.txt', 'r')
         nameList = nameFile.readlines()
-        for name in nameList():
+        for name in nameList:
             if field == name:
                 raise ValidationError('Choose another name...')
         nameFile.close()
