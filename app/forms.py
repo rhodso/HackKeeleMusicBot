@@ -17,7 +17,7 @@ class UsernameForm(FlaskForm):
         swearFile = open('app/badwords', 'r')
         swearList = swearFile.readlines()
         for swear in swearList:
-            swearRegex = r""+swear+""
+            swearRegex = r""+swear
             if re.search(swearRegex, str(field), re.IGNORECASE):
                 raise ValidationError('Choose another name...')
         swearFile.close()

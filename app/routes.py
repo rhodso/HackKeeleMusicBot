@@ -23,7 +23,7 @@ def index():
         }
     ]
     curVideo = next(iter(videos))
-    return render_template('index.html', title='HACK Keele | Music Player', form=form, videos=videos, curVideo=curVideo, name='default')
+    return render_template('index.html', title='HACK Keele | Music Player', form=form, videos=videos, curVideo=curVideo, name=session.get('username'))
 
 
 @app.route('/requestSong', methods=['GET', 'POST'])
