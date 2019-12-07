@@ -6,3 +6,9 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 from app import routes
+
+@app.route('/crash')
+def main():
+    raise Exception()
+
+app.run(debug=True)
