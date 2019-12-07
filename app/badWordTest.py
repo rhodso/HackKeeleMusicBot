@@ -1,17 +1,21 @@
 #!/usr/bin/python3
 
+import re
+
 testUsername = "fuck"
 
-swearFile = open('badwords.txt', 'r')
+swearFile = open('app/badwords.txt', 'r')
 swearList = swearFile.readlines()
+c = 0
 for swear in swearList:
-    c = 0
+    swear = re.sub("\s", "", swear)
     for w in testUsername.split():
         if(w == swear):
             c = c + 1
-    if c > 0:
-        print("oShit")
-    else:
-        print("you're good")
+            break
+if c > 0:
+    print("oShit")
+else:
+    print("you're good")
 swearFile.close()
 

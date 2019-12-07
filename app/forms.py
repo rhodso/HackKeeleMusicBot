@@ -16,22 +16,23 @@ class UsernameForm(FlaskForm):
 
         swearFile = open('app/badwords.txt', 'r')
         swearList = swearFile.readlines()
+        testUsername = str(field)
+        c = 0
         for swear in swearList:
-            c = len([x for x in str(field).split() if x == swear])
-            c = 0
-            testUsername = str(field)
-            for w in testUsername.split():
+            swear = re.sub("\s", "", swear)
+            for w in testUsername.split()
                 if(w == swear):
-                    c += 1
-
-            if c > 0:
-                raise ValidationError('Choose another name...')
+                    c = c + 1
+        if(c > 0):
+            break
+            raise ValidationError('Choose another name...')
         swearFile.close()
 
         nameFile = open('app/currentUsers.txt', 'r')
         nameList = nameFile.readlines()
         for name in nameList:
-            if field == name:
+            name = re.sub("\s", "", name)
+            if str(field) == name:
                 raise ValidationError('Choose another name...')
         nameFile.close()
 
