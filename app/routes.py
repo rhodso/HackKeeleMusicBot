@@ -20,8 +20,8 @@ def index():
             'VideoID': 'OWc1jaycOlQ'
         }
     ]
-    currentVideo = next(iter(videos))
-    return render_template('index.html', title='HACK Keele | Music Player', form=form,videos=videos, currentVideo=currentVideo, name='RoryGee')
+    curVideo = next(iter(videos))
+    return render_template('index.html', title='HACK Keele | Music Player', form=form, videos=videos, curVideo=curVideo, name='RoryGee')
 
 
 @app.route('/requestSong')
