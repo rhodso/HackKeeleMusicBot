@@ -10,5 +10,9 @@ class IDForm(FlaskForm):
 
 
 class UsernameForm(FlaskForm):
-    userName = StringField('Enter your preferred name: ', validators=[DataRequired()])
+    def validateName(self, field):
+        #TODO add validation to make sure that it doesn't already exist and also doesn't contain any banned words
+        return True
+
+    userName = StringField('Enter your preferred name: ', validators=[DataRequired(), validateName])
     submit = SubmitField('Submit')
