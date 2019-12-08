@@ -12,6 +12,7 @@
 				<th>Username</th>
 				<th>Request</th>
 			</tr>
+			<!–– TODO: Make UP/DOWN change ranking ––>
 			{% for video in videos %}
 				<tr><td>[Up / Down]  {{ video.votes }}</td><td>{{ video.UID.Username }}</td><td>{{ video.VideoID }}</td></tr>
 			{% endfor %}
