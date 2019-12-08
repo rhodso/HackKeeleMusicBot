@@ -7,22 +7,29 @@ from app.forms import UsernameForm, IDForm
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if 'username' in session:
+        # TODO: Add rank ordered by no.Votes
+        # TODO: Add request ID to
         videos = [
-           {
-               'votes': 1,
-               'UID': {'Username': 'RoryGee'},
+            {
+                'RequestID': 1,
+                'Rank': 1,
+                'votes': 1,
+                'UID': {'Username': 'RoryGee'},
                 'VideoID': 'OWc1jaycOlQ'
             },
             {
-               'votes': 1,
-               'UID': {'Username': 'Rhodso'},
-               'VideoID': 'OWc1jaycOlQ'
-           }
-           ]
+                'RequestID': 2,
+                'Rank': 2,
+                'votes': 1,
+                'UID': {'Username': 'Rhodso'},
+                'VideoID': 'OWc1jaycOlQ'
+            }
+        ]
         curVideo = next(iter(videos))
     else:
         return redirect('/register')
-    return render_template('index.html', title='HACK Keele | Music Player', videos=videos, curVideo=curVideo, name=session.get('username'))
+    return render_template('index.html', title='HACK Keele | Music Player', videos=videos, curVideo=curVideo,
+                           name=session.get('username'))
 
 
 @app.route('/register', methods=['GET', 'POST'])
