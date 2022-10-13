@@ -59,7 +59,10 @@ def getSong(url):
 
 def playSong(filepath):
     # Playsound function
-    AudioPlayer(filename=filepath).play(block=True)
+    p = AudioPlayer(filename=filepath)
+    p.play(block=False)
+    time.sleep(15)
+    p.stop()
     return None
 
 class ApiComms():
@@ -74,13 +77,13 @@ class ApiComms():
             exit()
 
     @staticmethod
-    def songHasBeenPlayed(self, song):
+    def songHasBeenPlayed(song):
         # Send a request to the API to say that the song has been played
         log("ApiComms: Song has been played: " + song)
         # TODO: Send request to API
         
     @staticmethod
-    def updateSongslist(self):
+    def updateSongslist():
         # Send a request to the API to get the song list
         log("ApiComms: Getting updated song list")
         pass
@@ -100,29 +103,38 @@ class ApiComms():
         return songList
 
 class SongList():
+    songList = []
+    lock = threading.Lock() # Threading lock
+
     def __init__(self):
-        self.songList = []
-        self.lock = threading.Lock() # Threading lock
+        pass
     
     @staticmethod
-    def getSongList(self, ptr):
+    def updateSongList():
+        # Update the song list
+        SongList.lock.acquire()
+        SongList.songList = ApiComms.updateSongslist()
+        SongList.lock.release()
+
+    @staticmethod
+    def getSongList(ptr):
         # Lock the songList
-        self.lock.acquire()
+        SongList.lock.acquire()
         log("SongList: Locking songList")
         songList = None
         try:
-            if(ptr >= len(self.songList)):
+            if(len(SongList.songList) == 0):
+                return "No songs in queue"
+            if(ptr >= len(SongList.songList)):
                 return "Need to reset pointer"
             if(ptr < 0):
                 return "Need to reset pointer"
-            if(len(self.songList) == 0):
-                return "No songs in queue"
             
             # Return the songList
-            songList = self.songList[ptr]
+            songList = SongList.songList[ptr]
         finally:
             # Unlock the songList
-            self.lock.release()
+            SongList.lock.release()
             log("SongList: Unlocking songList")
         
         if(songList == None):
@@ -132,55 +144,60 @@ class SongList():
             return songList
 
     @staticmethod
-    def popSong(self, ptr):
+    def popSong(ptr):
         # Lock the songList
-        self.lock.acquire()
+        SongList.lock.acquire()
         log("SongList: Locking songList")
         try:
-            if(ptr >= len(self.songList)):
+            if(ptr >= len(SongList.songList)):
                 return 1
             if(ptr < 0):
                 return 1
-            if(len(self.songList) == 0):
+            if(len(SongList.songList) == 0):
                 return 1
             
             # Pop the song we just played from the songList
-            self.songList.pop(ptr)
+            SongList.songList.pop(ptr)
             log("SongList: Popped song from songList")
             return 0
         finally:
             # Unlock the songList
-            self.lock.release()
+            SongList.lock.release()
             log("SongList: Unlocking songList")
         return 1
 
 class SongPlayer(Thread):
-    def __init__(self, songList):
+    def __init__(self):
         Thread.__init__(self)
-        self.songList = songList
         self.ptr = 0
 
     def run(self):
+        # Sleep some time on startup
+        time.sleep(10)
+
         while True:
-            log("SongPlayer: Getting song list")
+            log("SongPlayer: Getting song")
             # Get a song from the songList
-            song = self.songList.getSongList(self.ptr)
+            song = SongList.getSongList(self.ptr)
+
             if(song == "Other error"):
                 # Increment the pointer, and continue
                 log("SongPlayer: Other error, incrementing pointer")
                 self.ptr += 1
+                time.sleep(5)
                 continue
 
             if(song == "Need to reset pointer"):
                 # Reset the pointer, and continue
                 log("SongPlayer: Need to reset pointer")
                 self.ptr = 0
+                time.sleep(5)
                 continue
 
             if(song == "No songs in queue"):
                 # Wait 65 seconds, and continue
                 log("SongPlayer: No songs in queue, waiting 65 seconds")
-                time.sleep(65)
+                time.sleep(15)
                 continue
 
             # Check that the song is downloaded
@@ -188,6 +205,7 @@ class SongPlayer(Thread):
             if not getIsSongDownloaded(song):
                 log("SongPlayer: Song not downloaded, incrementing pointer")
                 self.ptr += 1
+                time.sleep(5)
                 continue
 
             log("SongPlayer: Playing song " + song)
@@ -197,25 +215,30 @@ class SongPlayer(Thread):
                 # Increment the pointer, and continue
                 log("SongPlayer: Something went wrong playing song, incrementing pointer")
                 self.ptr += 1
+                time.sleep(5)
                 continue
 
+            # Play the song
             playSong(songFP)
+
             # Also reset the pointer
             self.ptr = 0
             log("SongPlayer: Song played")
 
             # Pop the song we just played from the songList
             log("SongPlayer: Popping song from songList")
-            self.songList.popSong(self.ptr)
+            SongList.popSong(self.ptr)
 
             # Tell the API that the song has been played
             log("SongPlayer: Telling API that song has been played")
-            ApiComms.songHasBeenPlayed(self, song)
+            ApiComms.songHasBeenPlayed(song)
 
             log("SongPlayer: finished playing song, playing the next song")
+            time.sleep(5)
 
 class SongDownloader(Thread):
     def __init__(self, url):
+        Thread.__init__(self)
         self.url = url
 
     def run(self):
@@ -230,12 +253,17 @@ try:
     player = SongPlayer()
     player.start()
 
+    # Temporary testing player
+    # time.sleep(10)
+    # exit()
+
     while(True):
         # Update the song list from the API
         log("Main: Updating song list...")
 
         # Get the song list from the API
         songList = ApiComms.updateSongslist()
+        SongList.updateSongList()
         log("Main: Got song list from API")
 
         # Create some threads to download the songs
@@ -257,3 +285,4 @@ try:
 except KeyboardInterrupt:
     log("Main: Shutting down...")
     exit()
+
