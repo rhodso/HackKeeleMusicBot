@@ -1,38 +1,31 @@
--- Drop tables if they exist
-DROP TABLE IF EXISTS `users`;
-DROP TABLE IF EXISTS `SongRequest`;
-DROP TABLE IF EXISTS `Song`;
-DROP TABLE IF EXISTS `SongVote`;
-
-CREATE TABLE `user` (
-	`User_ID` INT NOT NULL AUTO_INCREMENT,
-	`User_Name` TEXT,
-	`User_PasswordHash` TEXT,
-	PRIMARY KEY (`User_ID`)
+DROP TABLE IF EXISTS "user";
+CREATE TABLE 'user' (
+	'User_ID' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+	'User_Name' TEXT, 
+	'User_PasswordHash' TEXT
 );
 
-CREATE TABLE `SongRequest` (
-	`Request_ID` INT NOT NULL AUTO_INCREMENT,
-	`User_ID` INT,
-	`Song_ID` INT,
-	`Request_Time` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`Request_Played` BOOLEAN,
-	PRIMARY KEY (`Request_ID`)
+DROP TABLE IF EXISTS "Song";
+CREATE TABLE 'Song' (
+	'Song_ID' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+	'Song_LastRequest' DATETIME, 
+	'Song_Url' TEXT, 
+	'Song_Title' TEXT
 );
 
-CREATE TABLE `Song` (
-	`Song_ID` INT NOT NULL AUTO_INCREMENT,
-	`Song_LastRequest` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`Song_Url` TEXT,
-	`Song_Title` TEXT,
-	PRIMARY KEY (`Song_ID`)
+DROP TABLE IF EXISTS "SongRequest";
+CREATE TABLE 'SongRequest' (
+	'Request_ID' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+	'User_ID' INTEGER, 
+	'Song_ID' INTEGER, 
+	'Request_Time' DATETIME, 
+	'Request_Played' BOOLEAN
 );
 
-CREATE TABLE `SongVote` (
-	`Vote_ID` INT NOT NULL AUTO_INCREMENT,
-	`Request_ID` INT,
-	`User_ID` INT,
-	`Vote_Value` INT,
-	PRIMARY KEY (`Vote_ID`)
+DROP TABLE IF EXISTS "SongVote";
+CREATE TABLE 'SongVote' (
+	'Vote_ID' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+	'Request_ID' INTEGER, 
+	'User_ID' INTEGER, 
+	'Vote_Value' INTEGER
 );
-
