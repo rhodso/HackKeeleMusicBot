@@ -1,3 +1,9 @@
+-- Drop tables if they exist
+DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `SongRequest`;
+DROP TABLE IF EXISTS `Song`;
+DROP TABLE IF EXISTS `SongVote`;
+
 CREATE TABLE `user` (
 	`User_ID` INT NOT NULL AUTO_INCREMENT,
 	`User_Name` TEXT,
