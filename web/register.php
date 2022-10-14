@@ -17,10 +17,26 @@
 
     // Handle the form submission
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        // Check that $username, $password, and $password2 are set
+        if (!isset($_POST['username'])){
+            showError("Username not set");
+            exit;
+        }
+
+        if (!isset($_POST['password'])){
+            showError("Password not set");
+            exit;
+        }
+
+        if (!isset($_POST['password2'])){
+            showError("Password2 not set");
+            exit;
+        }
+
         // Get the username, password, and retyped password from the form
-        $username = trim($_POST['username']);
-        $password = trim($_POST['password']);
-        $password2 = trim($_POST['password2']);
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+        $password2 = $_POST['password2'];
 
         // Detect funny business
         if (detectFunnyBusiness($username, "string") || detectFunnyBusiness($password, "string") || detectFunnyBusiness($password2, "string")) {
@@ -50,7 +66,30 @@
             exit;
         }
 
-        // Check that the password and retyped password match
+        // Check that t// Connect to the database
+            $db = connectToDB();
+
+            // Get the username and password from the form
+            $username = $_POST['username'];
+            $password = $_POST['password'];
+
+            // Check if the username and password are valid
+            $query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
+            $result = $db->query($query);
+            if ($result->numColumns() == 1) {
+                // The username and password are valid
+                // Set the session variable
+                $_SESSION['user_id'] = $username;
+
+                // Redirect to the home page
+                header('Location: index.php');
+                exit;
+            } else {
+                // The username and password are not valid
+                showError('Invalid username or password');
+            }
+        } else {
+            // he password and retyped password match
         if ($password != $password2) {
             // If the password and retyped password do not match, show an error
             showError('Passwords do not match');

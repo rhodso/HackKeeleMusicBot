@@ -26,11 +26,17 @@
         exit;
     }
 
+    // Check that $song is set
+    if (!isset($_GET['song'])){
+        showError("Song not set");
+        exit;
+    }
+
     // Handle the form submission
-    $songUrl = trim($_POST['song']);
+    $songUrl = $_POST['song'];
 
     // Detect funny business
-    if (detectFunnyBusiness($songUrl)) {
+    if (detectFunnyBusiness($songUrl, "string")) {
         showError('Nice try, but no banana ;)');
         exit;
     }

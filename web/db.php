@@ -16,21 +16,28 @@
     function detectFunnyBusiness($string, $expected_type){
         switch($expected_type){
             case "string":
-                if(get_class("a string") != get_class($string)){
-                    return false;
+                // Check that the string is a string
+                if (!is_string($string)) {
+                    return true;
                 }
                 break;
             case "integer":
-                if(get_class(420) != get_class($string)){
-                    return false;
+                // Check that the string is an integer
+                if (!is_int($string)) {
+                    return true;
                 }
                 break;
             case "number":
-                if(get_class(420.69) != get_class($string)){
-                    return false;
+                // Check that the string is a number
+                if (!is_numeric($string)) {
+                    return true;
                 }
                 break;
         }
+
+        // Type is ok, trim
+        $string = trim($string);
+
         $testString = ensureNoFunnyBusiness($string);
         return $testString != $string;
     }

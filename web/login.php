@@ -18,9 +18,20 @@
 
     // Handle login form submission
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        // Check that $username and $password are set
+        if (!isset($_POST['username'])){
+            showError("Username not set");
+            exit;
+        }
+
+        if (!isset($_POST['password'])){
+            showError("Password not set");
+            exit;
+        }
+
         // Get the username and password from the form
-        $username = trim($_POST['username']);
-        $password = trim($_POST['password']);
+        $username = $_POST['username'];
+        $password = $_POST['password'];
 
         // Detect funny business
         if (detectFunnyBusiness($username, "string") || detectFunnyBusiness($password, "string")) {
