@@ -19,11 +19,11 @@
     // Handle login form submission
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Get the username and password from the form
-        $username = $_POST['username'];
-        $password = $_POST['password'];
+        $username = trim($_POST['username']);
+        $password = trim($_POST['password']);
 
         // Detect funny business
-        if (detectFunnyBusiness($username) || detectFunnyBusiness($password)) {
+        if (detectFunnyBusiness($username, "string") || detectFunnyBusiness($password, "string")) {
             showError('Nice try, but no banana ;)');
             exit;
         }

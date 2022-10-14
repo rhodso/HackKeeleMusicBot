@@ -27,7 +27,7 @@
     }
 
     // Handle the form submission
-    $songUrl = $_POST['song'];
+    $songUrl = trim($_POST['song']);
 
     // Detect funny business
     if (detectFunnyBusiness($songUrl)) {

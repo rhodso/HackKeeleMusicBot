@@ -18,12 +18,12 @@
     // Handle the form submission
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Get the username, password, and retyped password from the form
-        $username = $_POST['username'];
-        $password = $_POST['password'];
-        $password2 = $_POST['password2'];
+        $username = trim($_POST['username']);
+        $password = trim($_POST['password']);
+        $password2 = trim($_POST['password2']);
 
         // Detect funny business
-        if (detectFunnyBusiness($username) || detectFunnyBusiness($password) || detectFunnyBusiness($password2)) {
+        if (detectFunnyBusiness($username, "string") || detectFunnyBusiness($password, "string") || detectFunnyBusiness($password2, "string")) {
             showError('Nice try, but no banana ;)');
             exit;
         }
