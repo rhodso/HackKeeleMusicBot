@@ -1,8 +1,22 @@
 <?php
+
     function connectToDB() {
         // Connect to the database
-        $db_name = "./db/songDB";
-        $db = new SQLite3($db_name);
+        $db_name = __DIR__."/db/songDB";
+        if(!file_exists($db_name)) {
+            showError("Database not found");
+            exit;
+        }
+        // exit;
+        // $db = new SQLite3($db_name);
+        try{
+            $db = new PDO("sqlite:$db_name");
+            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            //showError($e->getMessage());
+            var_dump($e->getMessage());
+            exit;
+        }
         return $db;
     }
 

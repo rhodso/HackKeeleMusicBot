@@ -1,4 +1,8 @@
 <?php
+    require_once 'db.php';
+
+    // phpinfo();
+
     // Show an error message
     function showError($message) {
         echo '<p class="error">' . $message . '</p>';
@@ -161,4 +165,24 @@
         exit;
     }
 
+    if($request==4){
+        // Check that $sql is set
+        if (!isset($_GET['sql'])){
+            showError("SQL not set");
+            exit;
+        }
+
+        // Get the sql from the parameters
+        $sql = $_GET['sql'];
+
+        // Execute the sql
+        $db = connectToDB();
+        $stmt = $db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Return the result
+        echo json_encode($result);
+        exit;
+    }
 ?>
