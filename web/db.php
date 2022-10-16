@@ -20,6 +20,20 @@
         return $db;
     }
 
+    function removeTagsAndStuff($string){
+        // Remove tags
+        $string = strip_tags($string);
+        // Remove whitespace
+        $string = trim($string);
+        $string = stripslashes($string);
+        $string = htmlspecialchars($string);
+        // Remove single and double quotes
+        $string = str_replace("'", "", $string);
+        $string = str_replace('"', "", $string);
+        
+        return $string;
+    }
+
     function ensureNoFunnyBusiness($string) {
         $string = trim($string);
         $string = stripslashes($string);

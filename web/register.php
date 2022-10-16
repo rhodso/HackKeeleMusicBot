@@ -7,6 +7,9 @@
     function showError($message) {
         echo '<p class="error">' . $message . '</p>';
     }
+    function showLog($message) {
+        echo '<p class="log">' . $message . '</p>';
+    }
 
     // Detect if the user is logged in
     if (isset($_SESSION['user_id'])) {
@@ -32,12 +35,14 @@
             showError("Password2 not set");
             exit;
         }
-
         // Get the username, password, and retyped password from the form
         $username = $_POST['username'];
         $password = $_POST['password'];
         $password2 = $_POST['password2'];
 
+        // Strip characters that could be used to inject SQL or HTML from the username
+        $username = removeTagsAndStuff($username);
+        
         // Detect funny business
         if (detectFunnyBusiness($username, "string") || detectFunnyBusiness($password, "string") || detectFunnyBusiness($password2, "string")) {
             showError('Nice try, but no banana ;)');
@@ -55,41 +60,18 @@
         $db = connectToDB();
 
         // Query the database for the user
-        $stmt = $db->prepare('SELECT * FROM users WHERE username = :username');
+        $sql = "SELECT * FROM user WHERE User_Name = :username";
+        $stmt = $db->prepare($sql);
         $stmt->bindParam(':username', $username);
         $stmt->execute();
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $userExists = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // If a user was found, show an error
-        if ($user) {
+        if ($userExists) {
             showError('That username is already taken');
             exit;
         }
 
-        // Check that t// Connect to the database
-            $db = connectToDB();
-
-            // Get the username and password from the form
-            $username = $_POST['username'];
-            $password = $_POST['password'];
-
-            // Check if the username and password are valid
-            $query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
-            $result = $db->query($query);
-            if ($result->numColumns() == 1) {
-                // The username and password are valid
-                // Set the session variable
-                $_SESSION['user_id'] = $username;
-
-                // Redirect to the home page
-                header('Location: index.php');
-                exit;
-            } else {
-                // The username and password are not valid
-                showError('Invalid username or password');
-            }
-        } else {
-            // he password and retyped password match
         if ($password != $password2) {
             // If the password and retyped password do not match, show an error
             showError('Passwords do not match');
@@ -100,13 +82,22 @@
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
         // Insert the user into the database
-        $stmt = $db->prepare('INSERT INTO users (username, password) VALUES (:username, :password)');
+        $sql = 'INSERT INTO user (User_Name, User_PasswordHash) VALUES (:username, :passwordHash)';
+        $stmt = $db->prepare($sql);
         $stmt->bindParam(':username', $username);
-        $stmt->bindParam(':password', $passwordHash);
+        $stmt->bindParam(':passwordHash', $passwordHash);
         $stmt->execute();
 
+        showLog('User created successfully');
+
         // Check that the user was inserted into the database correctly
-        if($stmt->rowCount() == 1){
+        $sql = "SELECT * FROM user WHERE User_Name = :username";
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':username', $username);
+        $stmt->execute();
+        $userExists = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if($userExists->rowCount() == 1){
             // If the user was inserted into the database correctly, set the user_id session variable, and redirect to the home page
             $_SESSION['user_id'] = $username;
             header('Location: index.php');
@@ -115,6 +106,9 @@
             showError('There was an error creating your account');
             exit;
         }
+
+        showLog("User inserted into database correctly");
+        showLog("If you're seeing this, something went wrong");
     }
 ?>
 
@@ -127,7 +121,7 @@
     <label for="password">Password</label><br>
     <input type="password" name="password" id="password"><br>
     <label for="password">Retype password</label><br>
-    <input type="password" name="password" id="password"><br>
+    <input type="password" name="password2" id="password2"><br>
     <input type="submit" value="Register">
 </form>
 <br>

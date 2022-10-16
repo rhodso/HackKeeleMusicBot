@@ -5,11 +5,12 @@
 
 <?php
     // Refresh the page every 60 seconds
-    header("Refresh:60");
+    // header("Refresh:60");
 
 ?>
 
 <?php
+
     // Ensure the user is logged in
     if (!isset($_SESSION['user_id'])) {
         // If the user is not logged in, redirect to the login page
@@ -19,6 +20,24 @@
 
     // Connect to the database
     $db = connectToDB();
+
+    // Query the database for the user
+    $stmt = $db->prepare('SELECT User_Name FROM user WHERE User_ID = :user_id');
+    $stmt->bindParam(':user_id', $_SESSION['user_id']);
+    $stmt->execute();
+    $userReturn = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // If a user was not found, show an error
+    if (!$userReturn) {
+        showError('Invalid user, please log in again');
+        exit;
+    }
+
+    // Get the user's name
+    $username = $userReturn['User_Name'];
+
+    // Show a welcome message
+    echo '<p><i>Welcome ' . $username . '</i>, <a href=logout.php>Click here to logout</a></p>';
 
     // Get a list of songRequests that have not been played
     $stmt = $db->prepare('SELECT * FROM songRequests WHERE played = 0');

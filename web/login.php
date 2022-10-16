@@ -33,6 +33,9 @@
         $username = $_POST['username'];
         $password = $_POST['password'];
 
+        // Strip characters that could be used to inject SQL or HTML from the username
+        $username = removeTagsAndStuff($username);
+
         // Detect funny business
         if (detectFunnyBusiness($username, "string") || detectFunnyBusiness($password, "string")) {
             showError('Nice try, but no banana ;)');
@@ -50,26 +53,28 @@
         $db = connectToDB();
 
         // Query the database for the user
-        $stmt = $db->prepare('SELECT * FROM users WHERE username = :username');
+        $stmt = $db->prepare('SELECT * FROM user WHERE User_Name = :username');
         $stmt->bindParam(':username', $username);
         $stmt->execute();
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $userReturn = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // If a user was not found, show an error
-        if (!$user) {
+        if (!$userReturn) {
             showError('Invalid username');
             exit;
         }
 
         // Check that the password matches
-        if (!password_verify($password, $user['password'])) {
+        if (!password_verify($password, $userReturn['User_PasswordHash'])) {
             // If the password does not match, show an error
             showError('Username and password do not match');
             exit;
         }
 
+        showError('Login successful!');
+
         // Set the user_id session variable
-        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_id'] = $userReturn['User_ID'];
 
         // Redirect to the home page
         header('Location: index.php');
