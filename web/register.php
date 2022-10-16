@@ -7,9 +7,6 @@
     function showError($message) {
         echo '<p class="error">' . $message . '</p>';
     }
-    function showLog($message) {
-        echo '<p class="log">' . $message . '</p>';
-    }
 
     // Detect if the user is logged in
     if (isset($_SESSION['user_id'])) {
@@ -88,27 +85,22 @@
         $stmt->bindParam(':passwordHash', $passwordHash);
         $stmt->execute();
 
-        showLog('User created successfully');
-
-        // Check that the user was inserted into the database correctly
-        $sql = "SELECT * FROM user WHERE User_Name = :username";
+        // Query the database for the user that was just created
+        $sql = "SELECT User_ID FROM user WHERE User_Name = :username";
         $stmt = $db->prepare($sql);
         $stmt->bindParam(':username', $username);
         $stmt->execute();
         $userExists = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if($userExists->rowCount() == 1){
+        if(count($userExists) == 1){
             // If the user was inserted into the database correctly, set the user_id session variable, and redirect to the home page
-            $_SESSION['user_id'] = $username;
+            $_SESSION['user_id'] = $userExists['User_ID'];
             header('Location: index.php');
         } else {
             // If the user was not inserted into the database correctly, show an error
             showError('There was an error creating your account');
             exit;
         }
-
-        showLog("User inserted into database correctly");
-        showLog("If you're seeing this, something went wrong");
     }
 ?>
 
