@@ -5,7 +5,7 @@
 
 <?php
     // Refresh the page every 60 seconds
-    // header("Refresh:60");
+    header("Refresh:60");
 
 ?>
 
@@ -37,25 +37,20 @@
     $username = $userReturn['User_Name'];
 
     // Show a welcome message
-    echo '<p><i>Welcome ' . $username . '</i>, <a href=logout.php>Click here to logout</a></p>';
-
+    echo '<p><i>Welcome ' . $username . '</i><p>';
+    
     // Get a list of songRequests that have not been played
     $stmt = $db->prepare('SELECT * FROM songRequests WHERE played = 0');
     $stmt->execute();
     $songRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // If there are no songRequests, show a message
-    if (count($songRequests) == 0) {
-        echo '<p>There are no songs in the queue, why not request some?</p>';
-    }
 
     $requestArray = array();
 
     // Loop through the songRequests
     foreach ($songRequests as $songRequest) {
         // Get the user that requested the song
-        $stmt = $db->prepare('SELECT * FROM users WHERE id = :id');
-        $stmt->bindParam(':id', $songRequest['user_id']);
+        $sql = 'SELECT * FROM SongRequest WHERE Request_Played = 0';
+        $stmt = $db->prepare($sql);
         $stmt->execute();
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -66,32 +61,43 @@
         $tmp['url'] = $songRequest['url'];
         $requestArray.push($tmp);
     }
-
 ?>
-
-<!-- Headers, etc -->
 
 
 <!-- Link to request a song-->
 <a href="request.php">Request a song</a>
 
+<!-- Table of requests -->
+<?php
+    // If there are no requests, show a message
+    if (count($requestArray) == 0) {
+        echo '<p>No requests</p>';
+    } else {
+        // Otherwise, show the requests
+        echo '<table>';
+        echo '<tr><th>URL</th><th>Votes</th><th>User ID</th></tr>';
+        foreach ($requestArray as $request) {
+            // Get a list of SongVote entries for this request ID
+            $stmt = $db->prepare('SELECT * FROM SongVote WHERE Vote_Request_ID = :request_id');
+            $stmt->bindParam(':request_id', $request['request_id']);
+            $stmt->execute();
+            $votes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-<!-- Display table of song requests -->
-<table>
-    <tr>
-        <th>User</th>
-        <th>Song</th>
-        <th>URL</th>
-    </tr>
-    <?php foreach ($requestArray as $request) { ?>
-        <tr>
-            <td><?php echo $request['user']; ?></td>
-            <td><?php echo $request['song']; ?></td>
-            <td><?php echo $request['url']; ?></td>
-        </tr>
-    <?php } ?>
+            // Create a sum, and then add the voteValue of each vote
+            $voteSum = 0;
+            foreach ($votes as $vote) {
+                $voteSum += $vote['Vote_Value'];
+            }
 
-</table>
+            echo '<tr>';
+            echo '<td><a href="' . $request['url'] . '">' . $request['song'] . '</a></td>';
+            echo '<td>' . $voteSum . '</td>';
+            echo '<td>' . $request['user'] . '</td>';
+            echo '</tr>';
+        }
+        echo '</table>';
+    }
+?>
 
 <!-- Link to logout -->
 <a href="logout.php">Logout</a>
