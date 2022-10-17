@@ -43,10 +43,9 @@
 //
 // Please see https://bitbucket.org/phpliteadmin/public/wiki/Configuration for more details
 
-// Read password from password.txt
-$pwd = file_get_contents('password.txt');
 
-//password to gain access
+// Get password from the get_password variable in auth.php
+
 $password = $pwd;
 
 //directory relative to this file to search for databases (if false, manually list databases in the $databases variable)
