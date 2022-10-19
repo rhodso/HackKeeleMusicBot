@@ -10,10 +10,6 @@
 ?>
 
 <?php
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
-
     function showLog($message) {
         echo '<p class="log">' . $message . '</p>';
     }
@@ -58,7 +54,21 @@
 
     // Loop through the songRequests
     foreach ($songRequests as $songRequest) {
-        
+        $score = 0;
+
+        // Get a list of votes for the songRequest
+        $sql = 'SELECT * FROM SongVote WHERE Request_ID = :songRequest_id';
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':songRequest_id', $songRequest['Request_ID']);
+        $stmt->execute();
+        $songVotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Loop through the songVotes
+        foreach ($songVotes as $songVote) {
+            // Add the vote to the score
+            $score += $songVote['Vote_Value'];
+        }
+
         // Get the user that requested the song
         $sql = 'SELECT User_Name FROM user WHERE User_ID = :user_id';        
         $stmt = $db->prepare($sql);        
@@ -83,11 +93,18 @@
         $tmp = array();        
         $tmp['user'] = $user['User_Name'];        
         $tmp['song'] = $song['Song_Title'];        
-        $tmp['url'] = $song['Song_Url'];        
+        $tmp['url'] = $song['Song_Url'];
+        $tmp['score'] = $score;
+        $tmp['request_id'] = $songRequest['Request_ID'];
         
         // Add the request to the array
         array_push($requestArray, $tmp);     
     }
+
+    // Sort the array by score
+    usort($requestArray, function($a, $b) {
+        return $b['score'] - $a['score'];
+    });
 ?>
 
 <!-- Link to request a song-->
@@ -105,12 +122,18 @@
         echo '<th>User</th>';
         echo '<th>Song</th>';
         echo '<th>URL</th>';
+        echo '<th>Score</th>';
+        echo '<th>Vote Up</th>';
+        echo '<th>Vote Down</th>';
         echo '</tr>';
         foreach ($requestArray as $request) {
             echo '<tr>';
             echo '<td>' . $request['user'] . '</td>';
             echo '<td>' . $request['song'] . '</td>';
             echo '<td><a href=' . $request['url'] . '>' . $request['url'] . '</a></td>';
+            echo '<td>' . $request['score'] . '</td>';
+            echo '<td><a href="https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=2&request_id='.$request['request_id'].'&vote=1">Vote up</a></td>';
+            echo '<td><a href="https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=2&request_id='.$request['request_id'].'&vote=-1">Vote down</a></td>';
             echo '</tr>';
         }
         echo '</table>';

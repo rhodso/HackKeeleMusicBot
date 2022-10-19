@@ -3,9 +3,17 @@
 
     // phpinfo();
 
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
+    // Start the session
+    session_start();
+
     // Show an error message
     function showError($message) {
         echo '<p class="error">' . $message . '</p>';
+        echo '<br><a href=main.php>Return to home page</a>';
     }
 
     // Get the request from html parameter
@@ -47,15 +55,15 @@
 
     // Deal with request 1
     if ($request == 1) {
-        // Check that $song_id is set
+        // Check that $request_id is set
         if (!isset($_GET['request_id'])){
-            showError("Song ID not set");
+            showError("Request ID not set");
             exit;
         }
 
         // Get the song_id from the parameters
-        $request_id = trim($_GET['request_id']);
-
+        $request_id = intval(trim($_GET['request_id']));
+        
         // Detect funny business
         if (detectFunnyBusiness($request_id, "integer")) {
             showError('Nice try, but no banana ;)');
@@ -77,38 +85,15 @@
 
     // Deal with request 2
     if ($request == 2) {
-        // Check that $user_id is set
-        if (!isset($_GET['user_id'])){
-            showError("User ID not set");
-            exit;
-        }
-
-        // Get the user_id from the session
-        $user_id = trim($_GET['user_id']);
-        
-        // Detect funny business
-        if (detectFunnyBusiness($user_id, "integer")) {
-            showError('Nice try, but no banana ;)');
-            exit;
-        }
 
         // Check that the user is logged in
         if (!isset($_SESSION['user_id'])) {
             showError('You must be logged in to vote');
+            // Show the login button
+            echo '<a href="login.php">Login</a>';
             exit;
         }
-
-        // Check that the user is not voting for themselves
-        if ($user_id == $_SESSION['user_id']) {
-            showError('You cannot vote for yourself');
-            exit;
-        }
-
-        // If a user was not found, show an error
-        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
-            showError('Invalid user');
-            exit;
-        }
+        $user_id = $_SESSION['user_id'];
 
         // Check that $request_id is set
         if (!isset($_GET['request_id'])){
@@ -117,7 +102,7 @@
         }
 
         // Get the request_id from the parameters
-        $request_id = $_GET['request_id'];
+        $request_id = intval($_GET['request_id']);
         
         // Detect funny business
         if (detectFunnyBusiness($request_id, "integer")) {
@@ -132,7 +117,7 @@
         }
 
         // Get the vote from the parameters
-        $vote = $_GET['vote'];
+        $vote = intval($_GET['vote']);
 
         // Detect funny business
         if (detectFunnyBusiness($vote, "integer")) {
@@ -140,28 +125,75 @@
             exit;
         }
 
+        // Detect invalid vote, must be 1, 0, or -1
+        if ($vote != 1 && $vote != 0 && $vote != -1) {
+            showError('Invalid vote');
+            exit;
+        }
+
         // Connect to the database
         $db = connectToDB();
 
         // Check that the user is valid
-        $stmt = $db->prepare('SELECT * FROM users WHERE user_id = :user_id');
+        $stmt = $db->prepare('SELECT * FROM user WHERE User_ID = :user_id');
         $stmt->bindParam(':user_id', $user_id);
         $stmt->execute();
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // If a user was not found, show an error
-        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+        if (!$user) {
             showError('Invalid user');
             exit;
-        }        
+        }
 
-        // Query the database for the user
-        $stmt = $db->prepare('UPDATE SongRequest SET Request_Votes = Request_Votes + :vote WHERE Request_ID = :request_id');
+        // Get the request info
+        $stmt = $db->prepare('SELECT * FROM SongRequest WHERE Request_ID = :request_id');
         $stmt->bindParam(':request_id', $request_id);
-        $stmt->bindParam(':vote', $vote);
         $stmt->execute();
+        $songRequest = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Return success message
-        echo json_encode(array("OK" => true));
-        exit;
+        // If a song request was not found, show an error
+        if (!$songRequest) {
+            showError('Invalid song request');
+            exit;
+        }
+
+        // If the user submitted the request, show an error
+        if ($songRequest['User_ID'] == $user_id) {
+            showError('You cannot vote for your own request');
+            exit;
+        }
+
+        // Check if the user has already voted
+        $stmt = $db->prepare('SELECT * FROM SongVote WHERE User_ID = :user_id AND Request_ID = :request_id');
+        $stmt->bindParam(':user_id', $user_id);
+        $stmt->bindParam(':request_id', $request_id);
+        $stmt->execute();
+        $pVote = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // If the user hasn't voted, insert a new vote
+        if(!$pVote) {    
+            // Add the vote
+            $stmt = $db->prepare('INSERT INTO SongVote (User_ID, Request_ID, Vote_Value) VALUES (:user_id, :request_id, :vote)');
+            $stmt->bindParam(':user_id', $user_id);
+            $stmt->bindParam(':request_id', $request_id);
+            $stmt->bindParam(':vote', $vote);
+            $stmt->execute();
+        }else{
+            // If the old vote is the same as the new vote, set the vote to 0
+            if ($pVote['Vote_Value'] == $vote) {
+                $vote = 0;
+            }
+
+            // User has already voted, so update the vote
+            $stmt = $db->prepare('UPDATE SongVote SET Vote_Value = :vote WHERE User_ID = :user_id AND Request_ID = :request_id');
+            $stmt->bindParam(':user_id', $user_id);
+            $stmt->bindParam(':request_id', $request_id);
+            $stmt->bindParam(':vote', $vote);
+            $stmt->execute();
+        }
+
+        // Return to main.php
+        header('Location: main.php');
     }
 ?>
