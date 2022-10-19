@@ -1,9 +1,14 @@
 <?php 
     include 'header.php'; 
+    include 'ytGetTitle.php';
     require_once 'db.php';
     ?>
 
 <?php
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
     function showError($message) {
         echo '<p class="error">' . $message . '</p><br><a href=index.php>Return to home page</a>';
     }
@@ -88,6 +93,22 @@
             $songTitleParts = explode("=", $songUrl);
             $songTitle = $songTitleParts[1];
 
+            // Get the URL
+            $url = "http://www.youtube.com/watch?v=" . $songTitleParts[1];
+
+            // Get the title
+            $str = file_get_contents($url);
+            if(strlen($str)>0){
+                $title = array();
+                $str = trim(preg_replace('/\s+/', ' ', $str)); // supports line breaks inside <title>
+                preg_match("/\<title\>(.*)\<\/title\>/i",$str,$title); // ignore case
+                $songTitle = $title[1];
+            }
+            
+            // Remove - YouTube from the title
+            $songTitle = str_replace(" - YouTube", "", $songTitle);
+
+            // Set the init time as 1
             $songInitTime = 1;
             
             // Insert the song into the database
@@ -158,6 +179,13 @@
         $stmt -> bindParam(':requestPlayed', $requestPlayed);
         $stmt -> execute();
         
+        // Update the song's last request time
+        $sql = 'UPDATE Song SET Song_LastRequest = :songLastRequest WHERE Song_ID = :songId';
+        $stmt = $db -> prepare ($sql);
+        $stmt -> bindParam(':songLastRequest', time());
+        $stmt -> bindParam(':songId', $songId);
+        $stmt -> execute();
+
         // Redirect to the home page
         header('Location: index.php');
     }
