@@ -42,66 +42,58 @@
     // Show a welcome message
     echo '<p>Welcome, <i>' . $username . '</i><p>';
 
-    showLog("Get a list of requests");
+    
     
     // Get a list of songRequests that have not been played
     $sql = 'SELECT * FROM SongRequest WHERE Request_Played = 0';
     $stmt = $db->prepare($sql);
     $stmt->execute();
     $songRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    showLog("Display the list of requests");
-
+    
     $requestArray = array();
-
-    // Log the length of the array
-    showLog("Length of array: " . count($songRequests));
 
     // Loop through the songRequests
     foreach ($songRequests as $songRequest) {
-        var_dump($songRequest);
-
+        
         // Get the user that requested the song
-        $sql = 'SELECT User_Name FROM user WHERE User_ID = :user_id';
-        showLog("Get the user that requested the song");
-        $stmt = $db->prepare($sql);
-        showLog("Bind the user_id");
-        $stmt->bindParam(':user_id', $songRequest['User_ID']);
-        showLog("Execute the query");
-        $stmt->execute();
-        showLog("Fetch the result");
+        $sql = 'SELECT User_Name FROM user WHERE User_ID = :user_id';        
+        $stmt = $db->prepare($sql);        
+        $stmt->bindParam(':user_id', $songRequest['User_ID']);        
+        $stmt->execute();        
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        var_dump($user);
-        showLog("Get the user name");
-
+              
         // If a user was not found, show an error
         if (!$user) {
             showError('Invalid user');
             exit;
-        }
-        showLog("Add the request to the array");
+        }        
 
         // Get the song name and url from ID
         $sql = 'SELECT Song_Title, Song_URL FROM song WHERE Song_ID = :song_id';
         $stmt = $db->prepare($sql);
         $stmt->bindParam(':song_id', $songRequest['Song_ID']);
         $stmt->execute();
-        $song = $stmt->fetch(PDO::FETCH_ASSOC);
-        var_dump($song);
-
+        $song = $stmt->fetch(PDO::FETCH_ASSOC);       
+        
         // Put the request in a list so it can be tabulated later
-        $tmp = array();
-        $tmp['user'] = $user['User_Name'];
-        $tmp['song'] = $song['Song_Title'];
-        $tmp['url'] = $song['Song_URL'];
-        $requestArray.push($tmp);
-
+        $tmp = array();        
+        $tmp['user'] = $user['User_Name'];        
+        $tmp['song'] = $song['Song_Title'];        
+        $tmp['url'] = $song['Song_URL'];        
+        
+        // Var dump
+        showLog("Var dump of tmp");
         var_dump($tmp);
+
+        // Add the request to the array
+        array_push($requestArray, $tmp);     
     }
 
+    // Var dump
+    showLog("Var dump of requestArray");
     var_dump($requestArray);
+    echo("<br>");
 ?>
-
 
 <!-- Link to request a song-->
 <a href="request.php">Request a song</a>
