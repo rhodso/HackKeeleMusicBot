@@ -37,10 +37,11 @@
     $username = $userReturn['User_Name'];
 
     // Show a welcome message
-    echo '<p><i>Welcome ' . $username . '</i><p>';
+    echo '<p>Welcome, <i>' . $username . '</i><p>';
     
     // Get a list of songRequests that have not been played
-    $stmt = $db->prepare('SELECT * FROM songRequests WHERE played = 0');
+    $sql = 'SELECT * FROM SongRequest WHERE Request_Played = 0';
+    $stmt = $db->prepare($sql);
     $stmt->execute();
     $songRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -49,8 +50,9 @@
     // Loop through the songRequests
     foreach ($songRequests as $songRequest) {
         // Get the user that requested the song
-        $sql = 'SELECT * FROM SongRequest WHERE Request_Played = 0';
+        $sql = 'SELECT User_Name FROM user WHERE User_ID = :user_id';
         $stmt = $db->prepare($sql);
+        $stmt->bindParam(':user_id', $songRequest['user_id']);
         $stmt->execute();
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
