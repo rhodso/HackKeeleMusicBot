@@ -2,7 +2,7 @@
 
     function connectToDB() {
         // Connect to the database
-        $db_name = __DIR__."/db/songDB";
+        $db_name = __DIR__."/db/songDB.php";
         if(!file_exists($db_name)) {
             showError("Database not found");
             exit;

@@ -54,7 +54,7 @@
         }
 
         // Get the song_id from the parameters
-        $request_id = $_GET['request_id'];
+        $request_id = trim($_GET['request_id']);
 
         // Detect funny business
         if (detectFunnyBusiness($request_id, "integer")) {
@@ -84,7 +84,7 @@
         }
 
         // Get the user_id from the session
-        $user_id = $_GET['user_id'];
+        $user_id = trim($_GET['user_id']);
         
         // Detect funny business
         if (detectFunnyBusiness($user_id, "integer")) {
@@ -162,27 +162,6 @@
 
         // Return success message
         echo json_encode(array("OK" => true));
-        exit;
-    }
-
-    if($request==4){
-        // Check that $sql is set
-        if (!isset($_GET['sql'])){
-            showError("SQL not set");
-            exit;
-        }
-
-        // Get the sql from the parameters
-        $sql = $_GET['sql'];
-
-        // Execute the sql
-        $db = connectToDB();
-        $stmt = $db->prepare($sql);
-        $stmt->execute();
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Return the result
-        echo json_encode($result);
         exit;
     }
 ?>
