@@ -133,6 +133,20 @@
             exit;
         }
 
+        // Check that song is in the queue but hasn't been played yet
+        $sql = "SELECT * FROM SongRequest WHERE Song_ID = :songId AND Request_Played = 0";
+        $stmt = $db -> prepare ($sql);
+        $stmt -> bindParam(':songId', $songId);
+        $stmt -> execute();
+        $songInQueue = $stmt -> fetch(PDO::FETCH_ASSOC);
+
+        // If the song is in the queue but hasn't been played yet
+        if ($songInQueue) {
+            // If the song has been requested, but not yet played, show an error
+            showError('This song is already in the queue');
+            exit;
+        }
+
         $requestPlayed = 0;
 
         // Insert the songrequest into the database
