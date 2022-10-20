@@ -8,7 +8,7 @@ CREATE TABLE 'user' (
 DROP TABLE IF EXISTS "Song";
 CREATE TABLE 'Song' (
 	'Song_ID' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-	'Song_LastRequest' DATETIME, 
+	'Song_LastRequest' INTEGER, 
 	'Song_Url' TEXT, 
 	'Song_Title' TEXT
 );
