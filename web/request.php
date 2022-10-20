@@ -77,6 +77,15 @@
             exit;
         }
 
+        // If youtube url, ensure it has /watch?v=
+        if (strpos($songUrl, 'youtube.com') !== false || strpos($songUrl, 'm.youtube.com') !== false) {
+            // If the song URL does not have /watch?v= or is not a youtube URL show an error
+            if (strpos($songUrl, '/watch?v=') === false){
+                showError('Please enter a youtube video URL');
+                exit;
+            }
+        }
+
         // Check if song has been requested before
         $stmt = $db -> prepare ('SELECT * FROM song WHERE Song_Url = :songUrl');
         $stmt -> bindParam(':songUrl', $songUrl);
