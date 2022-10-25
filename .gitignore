@@ -1,2 +1,3 @@
 .vscode/*
 py/songs/*.mp3
+web/db/*
