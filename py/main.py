@@ -60,8 +60,8 @@ def getSong(url):
 def playSong(filepath):
     # Playsound function
     p = AudioPlayer(filename=filepath)
-    p.play(block=False)
-    time.sleep(15)
+    p.play(block=True)
+    # time.sleep(1)
     p.stop()
     return None
 
