@@ -5,6 +5,7 @@ import json
 import os
 import threading
 from threading import Thread
+import requests
 
 # Other libs
 import youtube_dl
@@ -14,30 +15,92 @@ def log(message):
     # Log a message to the console and include the current time
     print(str(datetime.datetime.now()) + '   ' + str(message))
 
-def getIsSongDownloaded(url):
+def getIsSongDownloaded(songDict):
     # Get the song's video id
-    videoID = url.split('=')[1]
+    songID = songDict['Song_ID']
 
     # Check if the song has already been downloaded
-    return os.path.isfile('songs/' + videoID + '.mp3')
+    return os.path.isfile('songs/' + songID + '.mp3')
 
-def getSong(url):
+def getIsSongLivestreamFromUrl(url):
+    # Use a system call to youtube-dl to get if it's a livestream
+    # This is a bit of a hack, but it works
+
+    video = url
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': 'songs/tmp.%(ext)s',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+    }
+
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+      info_dict = ydl.extract_info(video, download=False)
+      is_live = info_dict.get('is_live', None)
+
+    return is_live
+
+def skipSong(url):
+    # Get info about the song
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': 'songs/tmp.%(ext)s',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+    }
+
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+      info_dict = ydl.extract_info(url, download=False)
+      is_live = info_dict.get('is_live', None)
+      duration = info_dict.get('duration', None)
+
+    if(duration < 5):
+        return True
+    
+    if(duration > 720):
+        return True
+
+    return False
+
+def getSong(songDict):
+    songID = songDict['Song_ID']
+    fileName = songDict['Song_ID']
+    
+    # Check if the song has already been downloaded
+    if getIsSongDownloaded(songDict):
+        log('GetSong: Song already downloaded, skipping...')
+        # Set the song filepath, and return it
+        songFP = 'songs/' + fileName + '.mp3'
+        return songFP
+    
+    log("GetSong: Downloading song...")
+    # Ask the API for song info
+    songInfoJson = ApiComms.getSongInfo(songID)
+    if(songInfoJson == None):
+        return None
+    songInfo = json.loads(songInfoJson)
+
+    #Get the url
+    url = songInfo['Song_Url']
     # Set the song filepath
     songFP = ""
 
-    # Get the song's video id
-    videoID = url.split('=')[1]
+    # Check if the song should be skipped
+    if(skipSong(url)):
+        # Tell the API that the song has been skipped
+        ApiComms.skipSong(songID)
+        return None
 
-    # Check if the song has already been downloaded
-    if getIsSongDownloaded(url):
-        # Set the song filepath, and return it
-        songFP = 'songs/' + videoID + '.mp3'
-        return songFP
-    
     # Song not downloaded, so download it
     ydl_opts = {
         'format': 'bestaudio/best',
-        'outtmpl': 'songs/' + videoID + '.%(ext)s',
+        'outtmpl': 'songs/' + fileName + '.%(ext)s',
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
@@ -48,7 +111,7 @@ def getSong(url):
     try:
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
-            songFP = 'songs/' + videoID + '.mp3'
+            songFP = 'songs/' + fileName + '.mp3'
             return songFP
 
     except:
@@ -67,43 +130,136 @@ def playSong(filepath):
 
 class ApiComms():
     def __init__(self):
-        # Test API connection
-        log("APIComms: Testing connection...")
-        try:
-            # TODO: Test API connection
-            log("ApiComms: Connection successful!")
-        except:
-            log("ApiComms: Connection unsuccessful :(")
-            exit()
+        pass
 
     @staticmethod
-    def songHasBeenPlayed(song):
+    def testConnection():
+        # Test API connection
+        log("APIComms: Testing connection...")
+        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=-1"
+        responseData = ""
+        try:
+            # Get the response
+            response = requests.get(url)
+            if response.status_code == 200:
+                responseData = response.text
+                if(responseData == "OK"):
+                    log("APIComms: Connection successful")
+                    return True
+                else:
+                    log("APIComms: Connection unsuccessful")
+                    return False
+        except:
+            log("ApiComms: Connection unsuccessful, exiting...")
+            return False
+
+    @staticmethod
+    def skipSong(songID):
+        log("Skipping song " + songID)
+        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=5&song_id=" + songID
+        responseData = ""
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                responseData = response.text
+                if(responseData == "OK"):
+                    log("APIComms: Skip successful")
+                else:
+                    log("APIComms: Skip unsuccessful")
+        except:
+            log("APIComms: Skip unsuccessful")
+
+
+    @staticmethod
+    def getSongInfo(songID):
+        log("APIComms: Getting song info for song ID: " + str(songID))
+        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=4&song_id=" + str(songID)
+        jsonData = ""
+        try:
+            # Get the response
+            response = requests.get(url)
+            if response.status_code == 200:
+                jsonData = response.text
+                return jsonData
+
+        except:
+            log("APIComms: Error getting song info")
+            return None
+        
+    @staticmethod
+    def songHasBeenPlayed(requestID):
         # Send a request to the API to say that the song has been played
-        log("ApiComms: Song has been played: " + song)
-        # TODO: Send request to API
+        log("ApiComms: Song has been played: " + requestID)
+        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=1"
+        jsonData = ""
+        try:
+            # Append the request ID to the URL
+            url += "&request_id=" + requestID
+            response = requests.get(url)
+            if response.status_code == 200:
+                jsonData = json.loads(response.text)
+                if(jsonData['OK']):
+                    log("ApiComms: Song marked as played!")
+                else:
+                    log("ApiComms: Error marking song as played!")
+            else:
+                log("ApiComms: Error marking song as played!")
+        except:
+            log("ApiComms: Error marking song as played!")
+        return None
+    
+    @staticmethod
+    def updateRequestsList():
+        # Get the requests list from the API
+        log("ApiComms: Getting requests list...")
+        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=0"
+        jsonData = ""
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                jsonData = json.loads(response.text)
+                log("ApiComms: Requests list received!")
+                requestsDictList = []
+                # Loop through the requests
+                for songRequest in jsonData:
+                    # If the song's votes is set to null, then set it to 0
+                    if songRequest['votes'] == None:
+                        songRequest['votes'] = 0
+                    requestsDictList.append(songRequest)
+                        
+                return requestsDictList
+            else:
+                log("ApiComms: Error getting requests list!")
+        except:
+            log("ApiComms: Error getting requests list!")
+        return None
         
     @staticmethod
     def updateSongslist():
         # Send a request to the API to get the song list
         log("ApiComms: Getting updated song list")
-        pass
+        
+        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=3"
+        jsonData = ""
+        # Perform the request
+        try:
+            response = requests.get(url)
+            # Check if the request was successful
+            if response.status_code == 200:
+                # Request was successful, so return the response
+                jsonData = response.json()
+                return jsonData
 
-        # For now, just return a test song list
-        jsonData = {}
-        with open("test.json") as jsonFile:
-            jsonData = json.load(jsonFile)
-
-        log("ApiComms: Got updated song list")
-        # Convert the json data to a list
-        songList = []   
-        for song in jsonData['songs']:
-            songList.append(song)
+        except:
+            log("ApiComms: Error getting song list")
+            return None
 
         # Return the song list
-        return songList
+        return jsonData
 
 class SongList():
     songList = []
+    requstList = []
     lock = threading.Lock() # Threading lock
 
     def __init__(self):
@@ -117,32 +273,36 @@ class SongList():
         SongList.lock.release()
 
     @staticmethod
-    def getSongList(ptr):
-        # Lock the songList
+    def updateRequestsList():
+        # Update the requests list
         SongList.lock.acquire()
-        log("SongList: Locking songList")
-        songList = None
-        try:
-            if(len(SongList.songList) == 0):
-                return "No songs in queue"
-            if(ptr >= len(SongList.songList)):
-                return "Need to reset pointer"
-            if(ptr < 0):
-                return "Need to reset pointer"
-            
-            # Return the songList
-            songList = SongList.songList[ptr]
-        finally:
-            # Unlock the songList
-            SongList.lock.release()
-            log("SongList: Unlocking songList")
-        
-        if(songList == None):
-            return "Other error"
-        else:
-            log("SongList: Returning songList")
-            return songList
+        SongList.requestList = ApiComms.updateRequestsList()
+        SongList.lock.release()
 
+    @staticmethod
+    def getSongList():
+        sl = ApiComms.updateSongslist()
+        return sl
+
+    @staticmethod
+    def getRequestsList():
+        rl = ApiComms.updateRequestsList()
+        return rl
+
+    @staticmethod
+    def getNextRequest(ptr):
+        rl = SongList.getRequestsList()
+        if(rl == None):
+            log("SongList: Request list is empty")
+            return "Need to update request list"
+        if(ptr >= len(rl)):
+            log("SongList: Pointer out of range")
+            return "Pointer out of range"
+
+        # Return the request at the given position
+        return rl[ptr]
+        
+        
     @staticmethod
     def popSong(ptr):
         # Lock the songList
@@ -178,28 +338,18 @@ class SongPlayer(Thread):
         while True:
             log("SongPlayer: Getting song")
             # Get a song from the songList
-            song = SongList.getSongList(self.ptr)
+            song = SongList.getNextRequest(self.ptr)    
 
-            if(song == "Other error"):
-                # Increment the pointer, and continue
-                log("SongPlayer: Other error, incrementing pointer")
-                self.ptr += 1
-                time.sleep(5)
+            if song == "Need to update request list":
+                log("SongPlayer: Need to update request list")
+                time.sleep(10)
+                SongList.updateRequestsList()
                 continue
-
-            if(song == "Need to reset pointer"):
-                # Reset the pointer, and continue
-                log("SongPlayer: Need to reset pointer")
+            if song == "Pointer out of range":
+                log("SongPlayer: Pointer out of range")
                 self.ptr = 0
-                time.sleep(5)
                 continue
-
-            if(song == "No songs in queue"):
-                # Wait 65 seconds, and continue
-                log("SongPlayer: No songs in queue, waiting 65 seconds")
-                time.sleep(15)
-                continue
-
+            
             # Check that the song is downloaded
             # If not downloaded, increment the pointer, and continue
             if not getIsSongDownloaded(song):
@@ -208,10 +358,21 @@ class SongPlayer(Thread):
                 time.sleep(5)
                 continue
 
-            log("SongPlayer: Playing song " + song)
+            # Check that the song returned is a dict
+            if type(song) is not dict:
+                log("SongPlayer: Song is not a dict")
+                self.ptr += 1
+                time.sleep(5)
+                continue
+        
+            # Get the important song details
+            songID = song['Song_ID']
+
+
+            log("SongPlayer: Playing song " + song['Song_ID'])
             # Song exists, so play it
             songFP = getSong(song)
-            if(songFP == ""):
+            if(songFP == "" or songFP == None):
                 # Increment the pointer, and continue
                 log("SongPlayer: Something went wrong playing song, incrementing pointer")
                 self.ptr += 1
@@ -231,20 +392,20 @@ class SongPlayer(Thread):
 
             # Tell the API that the song has been played
             log("SongPlayer: Telling API that song has been played")
-            ApiComms.songHasBeenPlayed(song)
+            ApiComms.songHasBeenPlayed(song['Request_ID'])
 
             log("SongPlayer: finished playing song, playing the next song")
             time.sleep(5)
 
 class SongDownloader(Thread):
-    def __init__(self, url):
+    def __init__(self, songDict):
         Thread.__init__(self)
-        self.url = url
+        self.songDict = songDict
 
     def run(self):
         # Download the song
-        log("SongDownloader: Downloading song " + self.url)
-        getSong(self.url)
+        log("SongDownloader: Downloading song " + self.songDict["Song_Url"])
+        getSong(self.songDict)
 
 log("Main: Starting up...")
 player = []
@@ -258,18 +419,24 @@ try:
     # exit()
 
     while(True):
+        # Test connection to the server
+        if not ApiComms.testConnection():
+            log("Main: Connection to the server failed")
+            time.sleep(15)
+            continue
+
         # Update the song list from the API
         log("Main: Updating song list...")
 
         # Get the song list from the API
-        songList = ApiComms.updateSongslist()
         SongList.updateSongList()
+        sl = SongList.getSongList()
         log("Main: Got song list from API")
 
         # Create some threads to download the songs
         log("Main: Creating threads to download songs")
         threads = []
-        for song in songList:
+        for song in sl:
             thread = SongDownloader(song)
             thread.start()
             threads.append(thread)

@@ -33,10 +33,18 @@
 
     // Figure out what the request is
     /*
-        0 - Get a list of songs that haven't been played yet
+        -1 - Test connection
+        0 - Get a list of requests
         1 - Set a song as played
         2 - Change the vote count for a song
+        3 - Get a list of songs in the DB
+        4 - Get info about a song from its ID
     */
+
+    // Deal with request -1
+    if ($request == -1) {
+        echo 'OK';
+    }
 
     // Deal with request 0
     if ($request == 0) {
@@ -44,12 +52,70 @@
         $db = connectToDB();
 
         // Query the database for the song requests
-        $stmt = $db->prepare('SELECT * FROM SongRequest WHERE Request_Played = 0');
+        $sql = "SELECT sr.request_id, sr.song_id, sum(sv.vote_value) as votes FROM Songrequest sr left join songvote sv on sr.request_id = sv.request_id where sr.request_played is false group by sr.request_id, sr.song_id order by votes desc";
+        $stmt = $db->prepare($sql);
         $stmt->execute();
         $songs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Return the songs
         echo json_encode($songs);
+        exit;
+    }
+    
+    // Deal with request 3
+    if ($request == 3){
+        $db = connectToDB();
+        $stmt = $db->prepare('SELECT * FROM Song');
+        $stmt->execute();
+        $songs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Encode the songs as JSON
+        echo json_encode($songs);
+        exit;
+    }
+
+    if($request == 4){
+        if(!isset($_GET['song_id'])){
+            showError('Song ID not set');
+            exit;
+        }
+
+        $song_id = intval(trim($_GET['song_id']));
+        if(detectFunnyBusiness($song_id, "int")){
+            showError('Nice try, but no banana ;)');
+            exit;
+        }
+
+        $db = connectToDB();
+        $stmt = $db->prepare('SELECT * FROM Song WHERE Song_ID = :song_id');
+        $stmt->bindParam(':song_id', $song_id);
+        $stmt->execute();
+        $song = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Encode the info as JSON
+        echo json_encode($song);
+        exit;
+    }
+
+    // Deal with request 5
+    if($request == 5){
+        if(!isset($_GET['song_id'])){
+            showError('Song ID not set');
+            exit;
+        }
+
+        $song_id = intval(trim($_GET['song_id']));
+        if(detectFunnyBusiness($song_id, "int")){
+            showError('Nice try, but no banana ;)');
+            exit;
+        }
+
+        $db = connectToDB();
+        $stmt = $db->prepare('UPDATE SongRequest SET Request_Played = 1 WHERE Song_ID = :song_id');
+        $stmt->bindParam(':song_id', $song_id);
+        $stmt->execute();
+
+        echo "OK";
         exit;
     }
 
@@ -196,4 +262,5 @@
         // Return to main.php
         header('Location: main.php');
     }
+    
 ?>
