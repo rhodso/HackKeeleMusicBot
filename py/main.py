@@ -38,8 +38,8 @@ def getIsSongLivestreamFromUrl(url):
     }
 
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-      info_dict = ydl.extract_info(video, download=False)
-      is_live = info_dict.get('is_live', None)
+        info_dict = ydl.extract_info(video, download=False)
+        is_live = info_dict.get('is_live', None)
 
     return is_live
 
@@ -56,9 +56,8 @@ def skipSong(url):
     }
 
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-      info_dict = ydl.extract_info(url, download=False)
-      is_live = info_dict.get('is_live', None)
-      duration = info_dict.get('duration', None)
+        info_dict = ydl.extract_info(url, download=False)   
+        duration = info_dict.get('duration', None)
 
     if(duration < 5):
         return True
