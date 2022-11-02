@@ -77,6 +77,22 @@
             exit;
         }
 
+        // If the url is shortened, expand it
+        if (strpos($songUrl, 'youtu.be') !== false) {
+            // Get the video ID by splitting the URL at the last slash
+            $videoId = explode('/', $songUrl);
+            // The video ID is the last element in the array
+            $videoId = $videoId[count($videoId) - 1];
+            // Expand the URL
+            $songUrl = 'https://www.youtube.com/watch?v=' . $videoId;
+        }
+
+        // If the url starts with m.youtube.com, change it to youtube.com
+        if (strpos($songUrl, 'm.youtube.com') !== false) {
+            // Replace m.youtube.com with youtube.com
+            $songUrl = str_replace('m.youtube.com', 'youtube.com', $songUrl);
+        }
+
         // If youtube url, ensure it has /watch?v=
         if (strpos($songUrl, 'youtube.com') !== false || strpos($songUrl, 'm.youtube.com') !== false) {
             // If the song URL does not have /watch?v= or is not a youtube URL show an error

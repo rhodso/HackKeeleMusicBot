@@ -2,3 +2,5 @@
 py/songs/*.mp3
 web/db/*
 songs/*.mp3
+songs/*.part
+py/songs/*.part
