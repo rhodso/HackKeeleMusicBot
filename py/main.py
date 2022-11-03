@@ -58,6 +58,8 @@ def skipSong(url):
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         info_dict = ydl.extract_info(url, download=False)   
         duration = info_dict.get('duration', None)
+        is_live = info_dict.get('is_live', None)
+        age_limit = info_dict.get('age_limit', None)
 
     if(duration < 5):
         return True
@@ -65,7 +67,13 @@ def skipSong(url):
     if(duration > 720):
         return True
 
-    return False
+    if(age_limit > 15):
+        return True
+
+    if(is_live is None):
+        return True
+    
+    return is_live
 
 def getSong(songDict):
     songID = songDict['Song_ID']
