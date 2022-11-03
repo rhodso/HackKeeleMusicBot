@@ -15,5 +15,5 @@
                 // pick a random line
                 $tagline = $taglines[array_rand($taglines)];
                 // print the tagline
-                echo "<h2><i>" . $tagline . "</i></h2>";
+                echo "<h4><i>" . $tagline . "</i></h4>";
             ?>
