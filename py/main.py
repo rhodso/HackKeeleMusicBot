@@ -70,10 +70,7 @@ def skipSong(url):
     if(age_limit > 15):
         return True
 
-    if(is_live is None):
-        return True
-    
-    return is_live
+    return False
 
 def getSong(songDict):
     songID = songDict['Song_ID']
@@ -143,7 +140,7 @@ class ApiComms():
     def testConnection():
         # Test API connection
         log("APIComms: Testing connection...")
-        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=-1"
+        url = "https://richard.keithsoft.com/hkmb/api.php?request=-1"
         responseData = ""
         try:
             # Get the response
@@ -163,7 +160,7 @@ class ApiComms():
     @staticmethod
     def skipSong(songID):
         log("Skipping song " + songID)
-        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=5&song_id=" + songID
+        url = "https://richard.keithsoft.com/hkmb/api.php?request=5&song_id=" + songID
         responseData = ""
         try:
             response = requests.get(url)
@@ -180,7 +177,7 @@ class ApiComms():
     @staticmethod
     def getSongInfo(songID):
         log("APIComms: Getting song info for song ID: " + str(songID))
-        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=4&song_id=" + str(songID)
+        url = "https://richard.keithsoft.com/hkmb/api.php?request=4&song_id=" + str(songID)
         jsonData = ""
         try:
             # Get the response
@@ -197,7 +194,7 @@ class ApiComms():
     def songHasBeenPlayed(requestID):
         # Send a request to the API to say that the song has been played
         log("ApiComms: Song has been played: " + requestID)
-        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=1"
+        url = "https://richard.keithsoft.com/hkmb/api.php?request=1"
         jsonData = ""
         try:
             # Append the request ID to the URL
@@ -219,7 +216,7 @@ class ApiComms():
     def updateRequestsList():
         # Get the requests list from the API
         log("ApiComms: Getting requests list...")
-        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=0"
+        url = "https://richard.keithsoft.com/hkmb/api.php?request=0"
         jsonData = ""
         try:
             response = requests.get(url)
@@ -246,7 +243,7 @@ class ApiComms():
         # Send a request to the API to get the song list
         log("ApiComms: Getting updated song list")
         
-        url = "https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=3"
+        url = "https://richard.keithsoft.com/hkmb/api.php?request=3"
         jsonData = ""
         # Perform the request
         try:

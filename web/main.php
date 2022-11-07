@@ -132,8 +132,8 @@
             echo '<td>' . $request['song'] . '</td>';
             echo '<td><a href=' . $request['url'] . '>' . $request['url'] . '</a></td>';
             echo '<td>' . $request['score'] . '</td>';
-            echo '<td><a href="https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=2&request_id='.$request['request_id'].'&vote=1">Vote up</a></td>';
-            echo '<td><a href="https://richard.keithsoft.com/hackKeeleMusicBot/api.php?request=2&request_id='.$request['request_id'].'&vote=-1">Vote down</a></td>';
+            echo '<td><a href="https://richard.keithsoft.com/hkmb/api.php?request=2&request_id='.$request['request_id'].'&vote=1">Vote up</a></td>';
+            echo '<td><a href="https://richard.keithsoft.com/hkmb/api.php?request=2&request_id='.$request['request_id'].'&vote=-1">Vote down</a></td>';
             echo '</tr>';
         }
         echo '</table>';
